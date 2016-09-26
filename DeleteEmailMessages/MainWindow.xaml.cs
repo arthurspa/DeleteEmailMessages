@@ -18,6 +18,7 @@ using MailKit;
 using MimeKit;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Configuration;
 
 namespace DeleteEmailMessages
 {
@@ -26,23 +27,18 @@ namespace DeleteEmailMessages
     /// </summary>
     public partial class MainWindow : Window
     {
-        public AppConfig AppConfig { get; set; }
+        public AppConfiguration AppConfig { get; set; }
 
         public ObservableCollection<FolderListItem> FolderListItems { get; set; }
 
         public Progress<string> TaskProgress { get; set; }
 
+
         public MainWindow()
         {
             InitializeComponent();
 
-            AppConfig = new AppConfig()
-            {
-                Host = "",
-                Port = 993,
-                UseSsl = true,
-                Username = ""
-            };
+            AppConfig = ReadConfig();
             gridConfiguration.DataContext = AppConfig;
             passwordBox.Password = "";
 
@@ -53,6 +49,93 @@ namespace DeleteEmailMessages
 
             TaskProgress = new Progress<string>();
             TaskProgress.ProgressChanged += TaskProgress_ProgressChanged;
+        }
+
+        private AppConfiguration ReadConfig()
+        {
+            try
+            {
+                var appConfig = new AppConfiguration();
+
+                var Host = ConfigurationManager.AppSettings[appConfig.HostKeyName];
+                var Port = ConfigurationManager.AppSettings[appConfig.PortKeyName];
+                var UseSsl = ConfigurationManager.AppSettings[appConfig.UseSslKeyName];
+                var Username = ConfigurationManager.AppSettings[appConfig.UsernameKeyName];
+
+                if (Host != "")
+                    appConfig.Host = Host;
+
+                int portOut;
+                if (int.TryParse(Port, out portOut))
+                    appConfig.Port = portOut;
+
+                bool useSslOut;
+                if (bool.TryParse(UseSsl, out useSslOut))
+                    appConfig.UseSsl = useSslOut;
+
+                if (Username != "")
+                    appConfig.Username = Username;
+
+                return appConfig;
+            }
+            catch (Exception ex)
+            {
+                string message = "There was an erro while reading configuration file. Using default settings";
+                MessageBox.Show(message);
+                logMessage($"Error: {ex.ToString()}");
+
+                return new AppConfiguration()
+                {
+                    Host = "",
+                    Port = 993,
+                    UseSsl = true,
+                    Username = ""
+                };
+            }
+
+        }
+
+        private Task WriteConfig(AppConfiguration appConfig, IProgress<string> progress)
+        {
+            return Task.Run(() =>
+            {
+                try
+                {
+                    Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+
+                    // Host
+                    config.AppSettings.Settings.Remove(appConfig.HostKeyName);
+                    config.AppSettings.Settings.Add(appConfig.HostKeyName, appConfig.Host);
+
+                    // Port
+                    config.AppSettings.Settings.Remove(appConfig.PortKeyName);
+                    config.AppSettings.Settings.Add(appConfig.PortKeyName, appConfig.Port.ToString());
+
+                    // UseSsl
+                    config.AppSettings.Settings.Remove(appConfig.UseSslKeyName);
+                    config.AppSettings.Settings.Add(appConfig.UseSslKeyName, appConfig.UseSsl.ToString());
+
+                    // Username
+                    config.AppSettings.Settings.Remove(appConfig.UsernameKeyName);
+                    config.AppSettings.Settings.Add(appConfig.UsernameKeyName, appConfig.Username);
+
+                    // Save to file
+                    config.Save(ConfigurationSaveMode.Modified);
+
+                    var confirmationMessage = "Configuration saved successfully!";
+
+                    progress.Report(confirmationMessage);
+                    MessageBox.Show(confirmationMessage);
+                }
+                catch (Exception ex)
+                {
+
+                    string message = "The configuration could not be saved. See logs for more information.";
+                    MessageBox.Show(message);
+                    progress.Report($"Error: {ex.ToString()}");
+                }
+                
+            });
         }
 
         private void TaskProgress_ProgressChanged(object sender, string e)
@@ -69,7 +152,7 @@ namespace DeleteEmailMessages
             }
 
             var totalMessagesToBeDeleted = FolderListItems
-                .Where(x=> x.IsSelected)
+                .Where(x => x.IsSelected)
                 .Select(x => x.TotalFilteredMessages)
                 .Aggregate((a, b) => a + b);
 
@@ -141,7 +224,7 @@ namespace DeleteEmailMessages
             });
         }
 
-        private Task<ImapClient> ConnectToServerAsync(AppConfig config, string password, IProgress<string> progress)
+        private Task<ImapClient> ConnectToServerAsync(AppConfiguration config, string password, IProgress<string> progress)
         {
             return Task.Run(async () =>
             {
@@ -284,6 +367,11 @@ namespace DeleteEmailMessages
         {
             Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri));
             e.Handled = true;
+        }
+
+        private async void buttonSaveConfiguration_Click(object sender, RoutedEventArgs e)
+        {
+            await WriteConfig(AppConfig, TaskProgress);
         }
     }
 }

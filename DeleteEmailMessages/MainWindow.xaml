@@ -47,13 +47,15 @@
                     <Label x:Name="labelPort" Grid.Column="0" Content="Port" HorizontalAlignment="Right" Margin="0,41,10,0" VerticalAlignment="Top" Height="26"/>
                     <Label x:Name="labelUseSsl" Grid.Column="0" Content="Use SSL" HorizontalAlignment="Right" Margin="0,72,10,0" VerticalAlignment="Top" Height="26"/>
                     <Label x:Name="labelUsername" Grid.Column="0" Content="Username" HorizontalAlignment="Right" Margin="0,103,10,0" VerticalAlignment="Top" Height="26"/>
-                    <Label x:Name="labelSenha" Grid.Column="0" Content="Senha" HorizontalAlignment="Right" Margin="0,134,10,0" VerticalAlignment="Top" Height="26"/>
+                    <Label x:Name="labelSenha" Grid.Column="0" Content="Password" HorizontalAlignment="Right" Margin="0,134,10,0" VerticalAlignment="Top" Height="26"/>
 
                     <TextBox Text="{Binding Host, Mode=TwoWay}" x:Name="textBoxHost" Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="10,14,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="283"/>
                     <TextBox Text="{Binding Port, Mode=TwoWay}" x:Name="textBoxPort" Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="10,44,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="283"/>
                     <CheckBox IsChecked="{Binding UseSsl, Mode=TwoWay}" x:Name="checkBoxUseSsl" Content="" Grid.Column="1" HorizontalAlignment="Left" Margin="10,78,0,0" VerticalAlignment="Top"/>
                     <TextBox Text="{Binding Username, Mode=TwoWay}" x:Name="textBoxUsername" Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="10,106,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="283"/>
                     <PasswordBox x:Name="passwordBox" Grid.Column="1" HorizontalAlignment="Left" Margin="10,137,0,0" VerticalAlignment="Top" Width="283" Height="23"/>
+                    <Button x:Name="buttonSaveConfiguration" Content="Save" Grid.Column="1" HorizontalAlignment="Left" Margin="218,176,0,0" VerticalAlignment="Top" Width="75" Click="buttonSaveConfiguration_Click"/>
+                    <Label x:Name="labelTip" Content="Your password will not be saved." Grid.Column="1" HorizontalAlignment="Left" Margin="10,160,0,0" VerticalAlignment="Top" FontSize="10"/>
 
                 </Grid>
             </TabItem>
